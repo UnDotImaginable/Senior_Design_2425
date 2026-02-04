@@ -8,3 +8,6 @@ Members:
   - Miguel Gallego Villegas
   - Noe Cifuentes
 
+
+Link to deployed app:
+https://main.d1b6njpl1594xy.amplifyapp.com/
