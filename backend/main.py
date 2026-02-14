@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from utils.logger import setup_logging, get_logger
+from database.database import init_db
 
 # Setup logging first thing
 setup_logging(log_level="DEBUG")  # Use DEBUG for development, INFO for production
@@ -29,6 +30,7 @@ app.add_middleware(
 async def startup_event():
     """Run on application startup"""
     logger.info("🚀 PowerOptim API starting up...")
+    init_db()
     logger.info("Environment: Development")
     logger.info("API docs available at: /docs")
 
