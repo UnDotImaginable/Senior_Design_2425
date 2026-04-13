@@ -33,8 +33,9 @@ def fetch_and_store_realtime_lmp():
             raise ValueError("PJM returned no realtime LMP items")
         data = items[0]
 
+        interval_start_utc = datetime.fromisoformat(data["datetime_beginning_utc"])
         reading = RealtimeLMP(
-            datetime_beginning_utc      = datetime.fromisoformat(data["datetime_beginning_utc"]),
+            datetime_beginning_utc      = interval_start_utc,
             datetime_beginning_ept      = datetime.fromisoformat(data["datetime_beginning_ept"]),
             pricing_node_id             = data["pnode_id"],
             pricing_node_name           = data["pnode_name"],
@@ -48,7 +49,7 @@ def fetch_and_store_realtime_lmp():
             marginal_loss_price_rt      = data["marginal_loss_price_rt"],
             latest_version              = data["latest_version"],
             version_number              = data["version_nbr"],
-            valid_until                 = datetime.now(timezone.utc) + timedelta(minutes=5)
+            valid_until                 = interval_start_utc + timedelta(minutes=5)
         )
         db.add(reading)
         db.commit()
@@ -71,17 +72,18 @@ def fetch_and_store_itsced_lmp():
         )
         data = response.json()["items"][0]
 
+        interval_start_utc = datetime.fromisoformat(data["datetime_beginning_utc"])
         reading = ItscedLMP(
             case_approval_datetime_utc  = datetime.fromisoformat(data["case_approval_datetime_utc"]),
             case_approval_datetime_ept  = datetime.fromisoformat(data["case_approval_datetime_ept"]),
-            datetime_beginning_utc      = datetime.fromisoformat(data["datetime_beginning_utc"]),
+            datetime_beginning_utc      = interval_start_utc,
             datetime_beginning_ept      = datetime.fromisoformat(data["datetime_beginning_ept"]),
             pnode_id                    = data["pnode_id"],
             pnode_name                  = data["pnode_name"],
             itsced_lmp                  = data["itsced_lmp"],
             marginal_congestion_component = data["marginal_congestion_component"],
             marginal_loss_component     = data["marginal_loss_component"],
-            valid_until                 = datetime.now(timezone.utc) + timedelta(minutes=5)
+            valid_until                 = interval_start_utc + timedelta(minutes=5)
         )
         db.add(reading)
         db.commit()
