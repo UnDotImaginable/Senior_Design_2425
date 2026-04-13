@@ -3,13 +3,18 @@ Pi routes - all communication between Raspberry Pi and backend lives here
 """
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
 from database import get_db
-from models.sensor_reading import SensorReading
-from schemas.sensor_reading import SensorReadingCreate
-from models.switch_event import SwitchEvent
-from schemas.switch_event import SwitchEventCreate
 from utils import get_logger
 from services.decision_service import get_pending_command
+from models.day_ahead_lmp import DayAheadLMP
+from models.itsced_lmp import ItscedLMP
+from models.realtime_lmp import RealtimeLMP
+from models.sensor_reading import SensorReading
+from models.switch_event import SwitchEvent
+from schemas.sensor_reading import SensorReadingCreate
+from schemas.switch_event import SwitchEventCreate
+
 
 logger = get_logger(__name__)
 
@@ -17,12 +22,18 @@ router = APIRouter(prefix="/pi", tags=["Pi"])
 
 
 @router.post("/readings")
-async def receive_reading(payload: SensorReadingCreate, db: Session = Depends(get_db)):
+async def receive_reading(
+    payload: SensorReadingCreate, 
+    db: Session = Depends(get_db)
+):
     """
     Receives a sensor snapshot from the Raspberry Pi and saves it to the database.
     Pi should call this every 10-30 seconds.
     """
-    logger.info(f"Received reading from Pi: battery={payload.battery_level}%, source={payload.power_source}")
+    logger.info(
+        f"Received reading from Pi: battery={payload.battery_level}%, "
+        f"source={payload.power_source}"
+    )
 
     reading = SensorReading(
         user_id=1,  # Hardcoded until auth is built
@@ -45,20 +56,59 @@ async def receive_reading(payload: SensorReadingCreate, db: Session = Depends(ge
         "timestamp": reading.timestamp
     }
     
+
+def get_grid_now(db: Session) -> float:
+    latest = (
+        db.query(RealtimeLMP)
+        .order_by(RealtimeLMP.datetime_beginning_utc.desc())
+        .first()
+    )
+    # logger.info(f"REAL TIME PRICE: {latest.total_lmp_rt}")
+    # return latest.total_lmp_rt if latest else 0.0
+    return 11
+
+def get_grid_future(db: Session) -> float:
+    latest = (
+        db.query(ItscedLMP)
+        .order_by(ItscedLMP.datetime_beginning_utc.desc()).
+        first()
+    )
+    # logger.info(f"FUTURE GRID PRICE: {latest.itsced_lmp}")
+    # return latest.itsced_lmp if latest else 0.0
+    return 12
+
+
+def get_battery_level(db: Session) -> int:
+    latest = (
+        db.query(SensorReading)
+        .filter(SensorReading.user_id == 1)
+        .order_by(SensorReading.timestamp.desc())
+        .first()
+    )
+    # return latest.battery_level if latest else 0
+    return 100
     
+
 @router.get("/pending-command")
-async def pending_command():
+async def pending_command(db: Session = Depends(get_db)):
     """
     Pi polls this endpoint to check if it should switch power sources.
     Pi should call this every 10-30 seconds.
     """
     logger.info("Pi requesting pending command")
 
-    result = get_pending_command()
+    g_now = get_grid_now(db)
+    g_future = get_grid_future(db)
+    b_charge = get_battery_level(db)
 
-    logger.debug(f"Returning command: {result['command']}, reason: {result['reason']}")
+    result = get_pending_command(g_now, g_future, b_charge)
+
+    logger.debug(
+        f"Returning command: {result['command']}, reason: {result['reason']}"
+    )
 
     return result
+
 
 @router.post("/confirm-switch")
 async def confirm_switch(payload: SwitchEventCreate, db: Session = Depends(get_db)):
@@ -66,7 +116,10 @@ async def confirm_switch(payload: SwitchEventCreate, db: Session = Depends(get_d
     Pi calls this after physically switching power sources.
     Logs the switch event to the database.
     """
-    logger.info(f"Pi confirmed switch to {payload.switched_to}, reason: {payload.reason}")
+    logger.info(
+        f"Pi confirmed switch to {payload.switched_to}, "
+        f"reason: {payload.reason}"
+    )
 
     event = SwitchEvent(
         user_id=1,  # Hardcoded until auth is built
