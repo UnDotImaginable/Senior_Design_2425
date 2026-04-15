@@ -56,27 +56,6 @@ async def receive_reading(
         "id": reading.id,
         "timestamp": reading.timestamp
     }
-    
-
-# def get_grid_now(db: Session) -> float | None:
-#     now = datetime.now(timezone.utc)
-#     latest = (
-#         db.query(RealtimeLMP)
-#         .filter(RealtimeLMP.valid_until > now)
-#         .order_by(RealtimeLMP.datetime_beginning_utc.desc())
-#         .first()
-#     )
-#     return latest.total_lmp_rt if latest else None
-
-# def get_grid_future(db: Session) -> float | None:
-#     now = datetime.now(timezone.utc)
-#     latest = (
-#         db.query(DayAheadLMP)
-#         .filter(DayAheadLMP.valid_until > now)
-#         .order_by(DayAheadLMP.datetime_beginning_utc.desc()).
-#         first()
-#     )
-#     return latest.itsced_lmp if latest else None
 
 
 def get_battery_level(db: Session) -> int | None:
