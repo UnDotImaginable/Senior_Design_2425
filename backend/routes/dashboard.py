@@ -8,7 +8,7 @@ from database.database import get_db
 from utils import get_logger
 from models import User, SensorReading, RealtimeLMP
 from routes.battery import get_battery_level, get_battery_status
-from routes.cost import calculate_cost_savings, get_hour_zone, EPT
+from routes.cost import calculate_cost_savings, get_hour_zone
 from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
