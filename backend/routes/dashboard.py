@@ -57,8 +57,9 @@ def get_uptime(db: Session, days: int = 30) -> float | None:
     since = datetime.now(timezone.utc) - timedelta(days=days)
     total_expected = (days * 24 * 60 * 60) / 10  # expected readings at 10s interval
 
+    bucket = func.floor(func.extract("epoch", SensorReading.timestamp) / 10)
     actual = (
-        db.query(func.count(SensorReading.id))
+        db.query(func.count(func.distinct(bucket)))
         .filter(SensorReading.user_id == 1)
         .filter(SensorReading.timestamp >= since)
         .scalar()
