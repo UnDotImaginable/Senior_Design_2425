@@ -69,9 +69,12 @@ def get_battery_level_at(db: Session, timestamp: datetime) -> float | None:
     """
     Returns the closest battery level reading to a given timestamp.
     """
+    max_gap = timedelta(minutes=15)
     reading = (
         db.query(SensorReading)
         .filter(SensorReading.user_id == 1)
+        .filter(SensorReading.timestamp >= timestamp - max_gap)
+        .filter(SensorReading.timestamp <= timestamp + max_gap)
         .order_by(func.abs(func.extract('epoch', SensorReading.timestamp - timestamp)))
         .first()
     )
