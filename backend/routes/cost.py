@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 
 router = APIRouter(prefix="/cost", tags=["Cost"])
 
-BATTERY_CAPACITY_KWH = 10.0
+BATTERY_CAPACITY_KWH = 0.004  # EEMB 3.7V 1100mAh LiPo
 
 # Time-of-day zones in EPT (Eastern Prevailing Time)
 # Frontend converts to local display time
@@ -101,14 +101,17 @@ def get_pricing_zones(db: Session) -> list[dict]:
     Past hours use RealtimeLMP, future hours use DayAheadLMP.
     Timestamps are in EPT for frontend display.
     """
-    now = datetime.now(timezone.utc)
-    start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    now_ept = datetime.now(EPT)
+    now = now_ept.astimezone(timezone.utc)
+    start_of_day_ept = now_ept.replace(hour=0, minute=0, second=0, microsecond=0)
 
     pricing_zones = []
 
     for hour in range(24):
-        hour_start = start_of_day + timedelta(hours=hour)
-        hour_end = hour_start + timedelta(hours=1)
+        hour_start_ept = start_of_day_ept + timedelta(hours=hour)
+        hour_end_ept = hour_start_ept + timedelta(hours=1)
+        hour_start = hour_start_ept.astimezone(timezone.utc)
+        hour_end = hour_end_ept.astimezone(timezone.utc)
         is_past = hour_start <= now
 
         if is_past:
@@ -129,7 +132,7 @@ def get_pricing_zones(db: Session) -> list[dict]:
             )
 
         pricing_zones.append({
-            "hour": hour_start.isoformat(),  # UTC ISO string, frontend converts to EPT
+            "hour": hour_start_ept.isoformat(),
             "price": round(price / 1000, 4) if price else None,  # USD/MWh → USD/kWh
             "is_forecast": not is_past
         })
