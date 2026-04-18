@@ -1,5 +1,4 @@
 """Quick script to add test data"""
-from sqlalchemy.orm import Session
 from database.database import SessionLocal, init_db
 from models import User, EnergyReading, BatteryStatus
 from datetime import datetime, timezone
