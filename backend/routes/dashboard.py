@@ -18,14 +18,14 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 
-def get_current_user(db: Session) -> User | None:
+def get_current_user(db: Session) -> dict:
     user = db.query(User).filter(User.id == 1).first()
     if not user:
         return {"firstName": None, "fullName": None}
-    
-    full_name  = user.full_name or None
+
+    full_name  = user.full_name.strip() if user.full_name else None
     first_name = full_name.split()[0] if full_name else None
-    
+
     return {"firstName": first_name, "fullName": full_name}
 
 
