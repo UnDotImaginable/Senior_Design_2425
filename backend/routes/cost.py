@@ -44,6 +44,15 @@ def get_switch_windows(db: Session, days: int = 30) -> list[dict]:
     Each window has a start, end, and type (grid=charging, battery=discharging).
     """
     since = datetime.now(timezone.utc) - timedelta(days=days)
+    # Get the last event before the window — seeds the first window's type
+    seed_event = (
+        db.query(SwitchEvent)
+        .filter(SwitchEvent.user_id == 1)
+        .filter(SwitchEvent.timestamp < since)
+        .order_by(SwitchEvent.timestamp.desc())
+        .first()
+    )
+
     events = (
         db.query(SwitchEvent)
         .filter(SwitchEvent.user_id == 1)
@@ -53,11 +62,21 @@ def get_switch_windows(db: Session, days: int = 30) -> list[dict]:
     )
 
     windows = []
+
+    # If there's a seed event, start a window from `since` with its type
+    if seed_event:
+        first_end = events[0].timestamp if events else datetime.now(timezone.utc)
+        windows.append({
+            "type": seed_event.switched_to,
+            "start": since,
+            "end": first_end
+        })
+
     for i in range(len(events)):
         start = events[i].timestamp
         end = events[i + 1].timestamp if i + 1 < len(events) else datetime.now(timezone.utc)
         windows.append({
-            "type": events[i].switched_to,  # "grid" or "battery"
+            "type": events[i].switched_to,
             "start": start,
             "end": end
         })
@@ -133,7 +152,7 @@ def get_pricing_zones(db: Session) -> list[dict]:
 
         pricing_zones.append({
             "hour": hour_start_ept.isoformat(),
-            "price": round(price / 1000, 4) if price else None,  # USD/MWh → USD/kWh
+            "price": round(price / 1000, 4) if price is not None else None,  # USD/MWh → USD/kWh
             "is_forecast": not is_past
         })
 
