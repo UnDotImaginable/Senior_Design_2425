@@ -99,6 +99,7 @@
 </template>
 
 <script>
+import config from '../config'
 export default {
   name: 'SystemTab',
   data() {
@@ -121,7 +122,7 @@ export default {
   },
   async mounted() {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/system/`)
+      const res = await fetch(`${config.apiBaseUrl}/api/system/`)
       const data = await res.json()
       this.lastUpdate   = data.health.lastUpdate
       this.uptime       = data.health.uptime

@@ -94,6 +94,7 @@
 </template>
 
 <script>
+import config from '../config'
 export default {
   name: 'BatteryTab',
   data() {
@@ -108,7 +109,7 @@ export default {
   },
   async mounted() {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/battery/`)
+      const res = await fetch(`${config.apiBaseUrl}/api/battery/`)
       const data = await res.json()
       this.batteryLevel    = data.status.level
       this.batteryStatus   = data.status.status

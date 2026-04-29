@@ -80,6 +80,7 @@
 </template>
 
 <script>
+import config from '../config'
 export default {
   name: 'EnergyTab',
   data() {
@@ -93,7 +94,7 @@ export default {
   },
   async mounted() {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/energy/`)
+      const res = await fetch(`${config.apiBaseUrl}/api/energy/`)
       const data = await res.json()
       this.summaryToday  = data.summary.today
       this.summaryWeek   = data.summary.week

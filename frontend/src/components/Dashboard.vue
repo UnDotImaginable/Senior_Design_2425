@@ -125,6 +125,7 @@
 </template>
 
 <script>
+import config from '../config'
 export default {
   name: 'DashboardTab',
   data() {
@@ -140,7 +141,7 @@ export default {
   },
   async mounted() {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/`)
+      const res = await fetch(`${config.apiBaseUrl}/api/dashboard/`)
       const data = await res.json()
       this.powerSource   = data.power.source
       this.batteryLevel  = data.battery.level

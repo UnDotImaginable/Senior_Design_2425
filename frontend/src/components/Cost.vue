@@ -125,6 +125,7 @@
 </template>
 
 <script>
+import config from '../config'
 export default {
   name: 'CostTab',
   data() {
@@ -136,7 +137,7 @@ export default {
   },
   async mounted() {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cost/`)
+      const res = await fetch(`${config.apiBaseUrl}/api/cost/`)
       const data = await res.json()
       this.monthlyCost = data.monthlyCost
       this.pricingData = data.pricingZones
