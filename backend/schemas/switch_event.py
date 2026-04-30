@@ -9,7 +9,7 @@ from typing import Optional
 class SwitchEventCreate(BaseModel):
     """
     Data the Raspberry Pi sends when confirming it switched power sources.
-    switched_to is required, reason is echoed back from the pending-command response.
+    command is required, reason is echoed back from the pending-command response.
     """
     command: str
     # Values: "battery" or "grid"

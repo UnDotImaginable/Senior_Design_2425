@@ -67,7 +67,7 @@ def get_switch_windows(db: Session, days: int = 30) -> list[dict]:
     if seed_event:
         first_end = events[0].timestamp if events else datetime.now(timezone.utc)
         windows.append({
-            "type": seed_event.switched_to,
+            "type": seed_event.command,
             "start": since,
             "end": first_end
         })
@@ -76,7 +76,7 @@ def get_switch_windows(db: Session, days: int = 30) -> list[dict]:
         start = events[i].timestamp
         end = events[i + 1].timestamp if i + 1 < len(events) else datetime.now(timezone.utc)
         windows.append({
-            "type": events[i].switched_to,
+            "type": events[i].command,
             "start": start,
             "end": end
         })

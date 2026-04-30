@@ -122,7 +122,7 @@ async def confirm_switch(payload: SwitchEventCreate, db: Session = Depends(get_d
 
     event = SwitchEvent(
         user_id=1,  # Hardcoded until auth is built
-        switched_to=payload.command,
+        command=payload.command,
         reason=payload.reason
     )
 

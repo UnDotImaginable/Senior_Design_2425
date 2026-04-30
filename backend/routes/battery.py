@@ -59,10 +59,10 @@ def get_recent_activity(db: Session, limit: int = 10) -> list:
 
     return [
         {
-            "action": "SWITCHED TO BATTERY POWER" if e.switched_to == "switch_to_battery" else "SWITCHED TO GRID POWER",
+            "action": "SWITCHED TO BATTERY POWER" if e.command == "switch_to_battery" else "SWITCHED TO GRID POWER",
             "details": e.reason or "No reason provided",
             "timestamp": e.timestamp.isoformat(),
-            "icon": "🔋" if e.switched_to == "switch_to_battery" else "🔌"
+            "icon": "🔋" if e.command == "switch_to_battery" else "🔌"
         }
         for e in events
     ]
