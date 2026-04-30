@@ -24,7 +24,7 @@ class SwitchEvent(Base):
     timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     # What the Pi switched to
-    switched_to = Column(String, nullable=False)
+    command = Column(String, nullable=False)
     # Values: "battery" or "grid"
 
     # Why the switch happened - echoed back from the pending-command response
@@ -35,4 +35,4 @@ class SwitchEvent(Base):
     user = relationship("User", back_populates="switch_events")
 
     def __repr__(self):
-        return f"<SwitchEvent(time={self.timestamp}, switched_to={self.switched_to}, reason={self.reason})>"
+        return f"<SwitchEvent(time={self.timestamp}, command={self.command}, reason={self.reason})>"
