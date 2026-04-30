@@ -116,7 +116,7 @@ async def confirm_switch(payload: SwitchEventCreate, db: Session = Depends(get_d
     Logs the switch event to the database.
     """
     logger.info(
-        f"Pi confirmed switch to {payload.switched_to}, "
+        f"Pi confirmed switch to {payload.command}, "
         f"reason: {payload.reason}"
     )
 

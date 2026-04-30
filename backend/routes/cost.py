@@ -209,11 +209,11 @@ def calculate_cost_savings(db: Session, days: int = 30) -> dict:
         ept_start = window["start"].astimezone(EPT)
         zone = get_hour_zone(ept_start)
 
-        if window["type"] == "grid":
+        if window["type"] == "switch_to_grid":
             # Charging — this is what we actually paid
             total_actual += cost
             zones[zone]["actual"] += cost
-        elif window["type"] == "battery":
+        elif window["type"] == "switch_to_battery":
             # Discharging — this is what we avoided
             total_without_system += cost
             zones[zone]["without_system"] += cost
