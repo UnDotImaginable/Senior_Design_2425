@@ -16,7 +16,7 @@
           <div class="bg-gradient-to-br from-green-900/30 to-green-950/30 rounded-2xl p-8 border-2 border-green-500/50">
             <div class="text-green-400/70 text-xs font-bold uppercase tracking-widest mb-2">This Month</div>
             <div class="text-6xl font-black text-green-400 drop-shadow-[0_0_20px_rgba(34,197,94,0.5)]">
-              ${{ monthlyCost?.savings?.toFixed(6) ?? '0.000000' }}
+              ${{ formatMoney(monthlyCost?.savings) }}
             </div>
             <div class="text-gray-500 text-sm mt-2 uppercase">{{ monthlyCost?.savingsPercentage ?? 0 }}% Reduction</div>
           </div>
@@ -30,13 +30,13 @@
         <div class="bg-gradient-to-br from-green-900/20 to-green-950/20 rounded-2xl p-10 border-l-4 border-green-500 relative overflow-hidden">
           <div class="absolute top-4 right-4 text-6xl opacity-20">✓</div>
           <div class="text-green-400/70 text-sm font-bold uppercase tracking-widest mb-3">With PowerOptim</div>
-          <div class="text-6xl font-black text-green-400 mb-2">${{ monthlyCost?.actual?.toFixed(6) ?? '0.000000' }}</div>
+          <div class="text-6xl font-black text-green-400 mb-2">${{ formatMoney(monthlyCost?.actual) }}</div>
           <div class="text-gray-500 uppercase text-sm">Actual cost paid (30 days)</div>
         </div>
         <div class="bg-gradient-to-br from-red-900/20 to-red-950/20 rounded-2xl p-10 border-l-4 border-red-500 relative overflow-hidden">
           <div class="absolute top-4 right-4 text-6xl opacity-20">✗</div>
           <div class="text-red-400/70 text-sm font-bold uppercase tracking-widest mb-3">Without System</div>
-          <div class="text-6xl font-black text-red-400 mb-2">${{ monthlyCost?.withoutSystem?.toFixed(6) ?? '0.000000' }}</div>
+          <div class="text-6xl font-black text-red-400 mb-2">${{ formatMoney(monthlyCost?.withoutSystem) }}</div>
           <div class="text-gray-500 uppercase text-sm">Grid-only estimate</div>
         </div>
       </div>
@@ -67,7 +67,7 @@
                 item.is_forecast ? 'opacity-50' : 'opacity-100',
                 barColor(i)
               ]"
-              :style="{ height: pricingMax > 0 ? (item.price / pricingMax) * 100 + '%' : '4px' }"
+              :style="{ height: item.price != null && pricingMax > 0 ? Math.max((item.price / pricingMax) * 100, 2) + '%' : '2px' }"
               :title="`${formatHour(item.hour)}: ${item.price != null ? '$' + item.price.toFixed(4) + '/kWh' : 'N/A'}${item.is_forecast ? ' (forecast)' : ''}`"
             ></div>
           </div>
@@ -93,7 +93,7 @@
                 <div class="text-gray-400 font-bold uppercase text-sm mb-1">{{ zone.category }}</div>
                 <div class="text-gray-600 text-xs font-mono">{{ zone.description }}</div>
               </div>
-              <span :class="['font-black text-3xl', zoneColor(i)]">${{ zone.savings?.toFixed(6) ?? '0.000000' }}</span>
+              <span :class="['font-black text-3xl', zoneColor(i)]">${{ formatMoney(zone.savings) }}</span>
             </div>
             <div class="bg-gray-800 rounded-full h-4 overflow-hidden border border-gray-700">
               <div
@@ -139,6 +139,11 @@ export default {
     }
   },
   methods: {
+    formatMoney(value) {
+      if (value == null || value === 0) return '0.00'
+      if (Math.abs(value) < 0.01) return value.toFixed(6)
+      return value.toFixed(2)
+    },
     barColor(hourIndex) {
       if (hourIndex >= 17 && hourIndex <= 20) return 'bg-gradient-to-t from-red-600 to-red-500 shadow-red-500/50'
       if (hourIndex >= 0 && hourIndex <= 5)  return 'bg-gradient-to-t from-green-600 to-green-500 shadow-green-500/50'

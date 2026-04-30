@@ -145,12 +145,19 @@ export default {
       this.powerSource    = data.power.source
       this.batteryLevel   = data.battery.level
       this.currentPrice   = data.power.currentPrice != null ? data.power.currentPrice.toFixed(4) : null
-      this.todaySavings   = data.savings.today != null ? data.savings.today.toFixed(6) : '0.000000'
+      this.todaySavings   = this.formatMoney(data.savings.today)
       this.priceTier      = data.power.priceTier
-      this.monthlySavings = data.savings.month != null ? data.savings.month.toFixed(6) : '0.000000'
+      this.monthlySavings = this.formatMoney(data.savings.month)
       this.uptime         = data.system.uptime
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err)
+    }
+  },
+  methods: {
+    formatMoney(value) {
+      if (value == null || value === 0) return '0.00'
+      if (Math.abs(value) < 0.01) return value.toFixed(6)
+      return value.toFixed(2)
     }
   }
 }
