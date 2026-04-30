@@ -11,7 +11,7 @@ class SwitchEventCreate(BaseModel):
     Data the Raspberry Pi sends when confirming it switched power sources.
     switched_to is required, reason is echoed back from the pending-command response.
     """
-    switched_to: str
+    command: str
     # Values: "battery" or "grid"
 
     reason: Optional[str] = None
