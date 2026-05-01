@@ -178,8 +178,8 @@ def fetch_and_store_da_lmp():
 def get_current_and_future_prices() -> dict:
     """
     Returns a clean price snapshot for the decision engine:
-      - current_lmp:  latest RT price ($/MWh)
-      - future_lmp:   DA price for next hour ($/MWh)
+      - current_lmp:  latest RT price ($/MWh) shifted back 24 hours
+      - future_lmp:   DA price for next hour ($/MWh) shifted back 24 hours
       - trend:        'rising', 'falling', or 'flat' based on last 3 RT readings
       - as_of_utc:    timestamp of the current RT reading
     """
@@ -193,16 +193,22 @@ def get_current_and_future_prices() -> dict:
     }
 
     try:
-        # Current: most recent RT reading
+        # Shift "now" back 24 hours so we match against yesterday's prices
+        now_utc = datetime.now(timezone.utc) - timedelta(hours=24)
+
+        # Current: most recent RT reading at or before the shifted time
         recent_rt = (
             db.query(RealtimeLMP)
-            .filter(RealtimeLMP.pricing_node_id == PNODE_ID)
+            .filter(
+                RealtimeLMP.pricing_node_id == PNODE_ID,
+                RealtimeLMP.datetime_beginning_utc <= now_utc,
+            )
             .order_by(RealtimeLMP.datetime_beginning_utc.desc())
             .limit(3)
             .all()
         )
         if not recent_rt:
-            logger.warning("No RT LMP data available in DB")
+            logger.warning("No RT LMP data available in DB for -24h window")
             return result
 
         result["current_lmp"] = recent_rt[0].total_lmp_rt
@@ -220,8 +226,7 @@ def get_current_and_future_prices() -> dict:
         else:
             result["trend"] = "unknown"
 
-        # Future: DA LMP for the next full hour
-        now_utc = datetime.now(timezone.utc)
+        # Future: DA LMP for the next full hour relative to the shifted time
         next_hour = now_utc.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
         da_reading = (
             db.query(DayAheadLMP)
@@ -233,6 +238,7 @@ def get_current_and_future_prices() -> dict:
         )
         result["future_lmp"] = da_reading.total_lmp_da if da_reading else None
 
+        logger.info(f"Prices pulled at simulated time: {now_utc} (now - 24h)")
         logger.info(f"current_lmp: ${result['current_lmp']}/MWh")
         logger.info(f"future_lmp:  ${result['future_lmp']}/MWh")
         logger.info(f"trend: {result['trend']}")
