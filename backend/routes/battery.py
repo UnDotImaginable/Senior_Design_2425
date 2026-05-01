@@ -3,7 +3,7 @@ Battery status routes
 """
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, text
 from database.database import get_db
 from utils import get_logger
 from models import SensorReading, SwitchEvent
@@ -49,22 +49,26 @@ def get_battery_status(db: Session) -> str:
 
 
 def get_recent_activity(db: Session, limit: int = 10) -> list:
-    events = (
-        db.query(SwitchEvent)
-        .filter(SwitchEvent.user_id == 1)
-        .order_by(SwitchEvent.timestamp.desc())
-        .limit(limit)
-        .all()
-    )
+    rows = db.execute(text("""
+        SELECT command, reason, timestamp FROM (
+            SELECT command, reason, timestamp,
+                   LAG(command) OVER (ORDER BY timestamp) AS prev_command
+            FROM switch_events
+            WHERE user_id = 1
+        )
+        WHERE prev_command IS NULL OR command != prev_command
+        ORDER BY timestamp DESC
+        LIMIT :limit
+    """), {"limit": limit}).fetchall()
 
     return [
         {
-            "action": "SWITCHED TO BATTERY POWER" if e.command == "switch_to_battery" else "SWITCHED TO GRID POWER",
-            "details": e.reason or "No reason provided",
-            "timestamp": e.timestamp.isoformat(),
-            "icon": "🔋" if e.command == "switch_to_battery" else "🔌"
+            "action": "SWITCHED TO BATTERY POWER" if r.command == "switch_to_battery" else "SWITCHED TO GRID POWER",
+            "details": r.reason or "No reason provided",
+            "timestamp": r.timestamp,
+            "icon": "🔋" if r.command == "switch_to_battery" else "🔌"
         }
-        for e in events
+        for r in rows
     ]
 
 
