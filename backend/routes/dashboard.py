@@ -55,7 +55,7 @@ def get_estimated_savings_today(db: Session) -> float:
     hours_on_battery = sum(
         (w["end"] - w["start"]).total_seconds() / 3600
         for w in windows
-        if w["type"] == "battery"
+        if w["type"] == "switch_to_battery"
     )
 
     return round(hours_on_battery * AVG_HOUSEHOLD_LOAD_KW * GRID_RATE_PER_KWH, 6)
