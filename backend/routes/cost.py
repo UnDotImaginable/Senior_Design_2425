@@ -280,10 +280,10 @@ def get_price_comparison(db: Session) -> list[dict]:
     # For each battery window, find the avg LMP of the preceding grid window
     charging_prices = {}
     for idx, w in enumerate(windows):
-        if w["type"] != "battery":
+        if w["type"] != "switch_to_battery":
             continue
         for prev_idx in range(idx - 1, -1, -1):
-            if windows[prev_idx]["type"] == "grid":
+            if windows[prev_idx]["type"] == "switch_to_grid":
                 p = windows[prev_idx]
                 raw = (
                     db.query(func.avg(RealtimeLMP.total_lmp_rt))
@@ -313,7 +313,7 @@ def get_price_comparison(db: Session) -> list[dict]:
         actual_price = grid_price
         for idx, w in enumerate(windows):
             if w["start"] <= h_mid < w["end"]:
-                if w["type"] == "battery":
+                if w["type"] == "switch_to_battery":
                     actual_price = charging_prices.get(idx)
                 break
 
