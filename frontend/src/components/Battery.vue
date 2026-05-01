@@ -36,7 +36,7 @@
         </div>
         <div class="bg-gradient-to-br from-gray-900/90 to-gray-950/90 rounded-xl p-6 border-l-4 border-amber-500">
           <div class="text-gray-400 font-bold uppercase text-sm mb-3">Capacity</div>
-          <div class="text-3xl font-black text-amber-400">{{ batteryCapacity }} kWh</div>
+          <div class="text-3xl font-black text-amber-400">{{ batteryCapacity }} Wh</div>
         </div>
         <div class="bg-gradient-to-br from-gray-900/90 to-gray-950/90 rounded-xl p-6 border-l-4 border-green-500">
           <div class="text-gray-400 font-bold uppercase text-sm mb-3">Health</div>
@@ -100,7 +100,7 @@ export default {
     return {
       batteryLevel: null,
       batteryStatus: null,
-      batteryCapacity: null,
+      batteryCapacity: 4.07,
       batteryHealth: null,
       powerSource: null,
       recentActivity: []
@@ -112,7 +112,6 @@ export default {
       const data = await res.json()
       this.batteryLevel    = data.status.level
       this.batteryStatus   = data.status.status
-      this.batteryCapacity = data.status.capacity
       this.batteryHealth   = data.status.health
       this.powerSource     = data.status.status === 'Discharging' ? 'Battery' : 'Grid'
       this.recentActivity  = data.recentActivity

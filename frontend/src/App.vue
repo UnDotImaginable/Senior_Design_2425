@@ -49,10 +49,8 @@
       <!-- Main Content -->
       <div class="max-w-[1600px] mx-auto">
         <DashboardTab v-if="currentTab === 'dashboard'" />
-        <EnergyTab    v-if="currentTab === 'energy'" />
         <BatteryTab   v-if="currentTab === 'battery'" />
         <CostTab      v-if="currentTab === 'cost'" />
-        <SystemTab    v-if="currentTab === 'system'" />
       </div>
 
       <!-- Footer spacing -->
@@ -63,19 +61,15 @@
 
 <script>
 import DashboardTab from './components/Dashboard.vue'
-import EnergyTab    from './components/Energy.vue'
 import BatteryTab   from './components/Battery.vue'
 import CostTab      from './components/Cost.vue'
-import SystemTab    from './components/System.vue'
 
 export default {
   name: 'SmartHomeDashboard',
   components: {
     DashboardTab,
-    EnergyTab,
     BatteryTab,
-    CostTab,
-    SystemTab
+    CostTab
   },
   data() {
     return {
@@ -83,10 +77,8 @@ export default {
       lastUpdate: '2 mins ago',
       tabs: [
         { id: 'dashboard', name: 'Dashboard', icon: '📊' },
-        { id: 'energy',    name: 'Energy',    icon: '⚡' },
         { id: 'battery',   name: 'Battery',   icon: '🔋' },
-        { id: 'cost',      name: 'Cost',      icon: '💰' },
-        { id: 'system',    name: 'System',    icon: '⚙️' }
+        { id: 'cost',      name: 'Cost',      icon: '💰' }
       ]
     }
   }
