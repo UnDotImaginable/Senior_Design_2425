@@ -249,6 +249,88 @@ def calculate_cost_savings(db: Session, days: int = 30) -> dict:
     }
 
 
+def get_price_comparison(db: Session) -> list[dict]:
+    now_naive = datetime.now(timezone.utc).replace(tzinfo=None)
+    since = now_naive - timedelta(hours=24)
+
+    seed_event = (
+        db.query(SwitchEvent)
+        .filter(SwitchEvent.user_id == 1)
+        .filter(SwitchEvent.timestamp < since)
+        .order_by(SwitchEvent.timestamp.desc())
+        .first()
+    )
+
+    events = (
+        db.query(SwitchEvent)
+        .filter(SwitchEvent.user_id == 1)
+        .filter(SwitchEvent.timestamp >= since)
+        .order_by(SwitchEvent.timestamp.asc())
+        .all()
+    )
+
+    windows = []
+    if seed_event:
+        first_end = events[0].timestamp if events else now_naive
+        windows.append({"type": seed_event.command, "start": since, "end": first_end})
+    for i, event in enumerate(events):
+        end = events[i + 1].timestamp if i + 1 < len(events) else now_naive
+        windows.append({"type": event.command, "start": event.timestamp, "end": end})
+
+    # For each battery window, find the avg LMP of the preceding grid window
+    charging_prices = {}
+    for idx, w in enumerate(windows):
+        if w["type"] != "battery":
+            continue
+        for prev_idx in range(idx - 1, -1, -1):
+            if windows[prev_idx]["type"] == "grid":
+                p = windows[prev_idx]
+                raw = (
+                    db.query(func.avg(RealtimeLMP.total_lmp_rt))
+                    .filter(RealtimeLMP.latest_version == True)
+                    .filter(RealtimeLMP.datetime_beginning_utc >= p["start"])
+                    .filter(RealtimeLMP.datetime_beginning_utc < p["end"])
+                    .scalar()
+                )
+                charging_prices[idx] = round(raw / 1000, 4) if raw else None
+                break
+
+    result = []
+    for i in range(24):
+        h_start = since + timedelta(hours=i)
+        h_end = h_start + timedelta(hours=1)
+        h_mid = h_start + timedelta(minutes=30)
+
+        raw = (
+            db.query(func.avg(RealtimeLMP.total_lmp_rt))
+            .filter(RealtimeLMP.latest_version == True)
+            .filter(RealtimeLMP.datetime_beginning_utc >= h_start)
+            .filter(RealtimeLMP.datetime_beginning_utc < h_end)
+            .scalar()
+        )
+        grid_price = round(raw / 1000, 4) if raw else None
+
+        actual_price = grid_price
+        for idx, w in enumerate(windows):
+            if w["start"] <= h_mid < w["end"]:
+                if w["type"] == "battery":
+                    actual_price = charging_prices.get(idx)
+                break
+
+        result.append({
+            "hour": h_start.replace(tzinfo=timezone.utc).astimezone(EPT).isoformat(),
+            "grid_price": grid_price,
+            "actual_price": actual_price,
+        })
+
+    return result
+
+
+@router.get("/price-comparison")
+async def get_price_comparison_endpoint(db: Session = Depends(get_db)):
+    return {"hours": get_price_comparison(db)}
+
+
 @router.get("/")
 async def get_cost_data(db: Session = Depends(get_db)):
     """
