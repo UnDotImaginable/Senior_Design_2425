@@ -61,6 +61,15 @@ def get_switch_windows(db: Session, days: int = 30) -> list[dict]:
         .all()
     )
 
+    # Pi logs every poll cycle — keep only actual transitions
+    prev_command = seed_event.command if seed_event else None
+    transitions = []
+    for event in events:
+        if event.command != prev_command:
+            transitions.append(event)
+            prev_command = event.command
+    events = transitions
+
     windows = []
 
     # If there's a seed event, start a window from `since` with its type
@@ -268,6 +277,15 @@ def get_price_comparison(db: Session) -> list[dict]:
         .order_by(SwitchEvent.timestamp.asc())
         .all()
     )
+
+    # Pi logs every poll cycle — keep only actual transitions
+    prev_command = seed_event.command if seed_event else None
+    transitions = []
+    for event in events:
+        if event.command != prev_command:
+            transitions.append(event)
+            prev_command = event.command
+    events = transitions
 
     windows = []
     if seed_event:
