@@ -41,6 +41,15 @@ def get_estimated_savings_today(db: Session) -> float:
         .all()
     )
 
+    # Pi logs every poll cycle — keep only actual transitions
+    prev_command = seed_event.command if seed_event else None
+    transitions = []
+    for event in events:
+        if event.command != prev_command:
+            transitions.append(event)
+            prev_command = event.command
+    events = transitions
+
     windows = []
 
     if seed_event:
