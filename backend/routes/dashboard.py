@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from database.database import get_db
 from utils import get_logger
-from models import User, SensorReading, RealtimeLMP
+from models import User, SensorReading, RealtimeLMP, SwitchEvent
 from routes.battery import get_battery_level, get_battery_status
 from routes.cost import calculate_cost_savings, get_hour_zone
 from datetime import datetime, timezone, timedelta
@@ -16,6 +16,49 @@ from zoneinfo import ZoneInfo
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
+
+AVG_HOUSEHOLD_LOAD_KW = 1.18
+GRID_RATE_PER_KWH = 0.18
+
+
+def get_estimated_savings_today(db: Session) -> float:
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    seed_event = (
+        db.query(SwitchEvent)
+        .filter(SwitchEvent.user_id == 1)
+        .filter(SwitchEvent.timestamp < today_start)
+        .order_by(SwitchEvent.timestamp.desc())
+        .first()
+    )
+
+    events = (
+        db.query(SwitchEvent)
+        .filter(SwitchEvent.user_id == 1)
+        .filter(SwitchEvent.timestamp >= today_start)
+        .order_by(SwitchEvent.timestamp.asc())
+        .all()
+    )
+
+    windows = []
+
+    if seed_event:
+        first_end = events[0].timestamp if events else now
+        windows.append({"type": seed_event.command, "start": today_start, "end": first_end})
+
+    for i in range(len(events)):
+        start = events[i].timestamp
+        end = events[i + 1].timestamp if i + 1 < len(events) else now
+        windows.append({"type": events[i].command, "start": start, "end": end})
+
+    hours_on_battery = sum(
+        (w["end"] - w["start"]).total_seconds() / 3600
+        for w in windows
+        if w["type"] == "battery"
+    )
+
+    return round(hours_on_battery * AVG_HOUSEHOLD_LOAD_KW * GRID_RATE_PER_KWH, 6)
 
 
 def get_current_user(db: Session) -> dict:
@@ -83,7 +126,6 @@ async def get_dashboard_data(db: Session = Depends(get_db)):
     current_price  = get_current_price(db)
     now_ept        = datetime.now(ZoneInfo("America/New_York"))
     monthly_costs  = calculate_cost_savings(db, days=30)
-    daily_costs    = calculate_cost_savings(db, days=1)
 
     dashboard_data = {
         "user": user,
@@ -97,7 +139,7 @@ async def get_dashboard_data(db: Session = Depends(get_db)):
             "priceTier":    get_hour_zone(now_ept).replace("_", "-").title()  # "Off-Peak", "Standard", "Peak"
         },
         "savings": {
-            "today": daily_costs["monthlyCost"]["savings"],
+            "today": get_estimated_savings_today(db),
             "month": monthly_costs["monthlyCost"]["savings"]
         },
         "energy": {

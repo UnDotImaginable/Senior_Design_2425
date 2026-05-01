@@ -47,7 +47,7 @@
                   <div class="text-2xl font-black text-amber-400">{{ currentPrice != null ? '$' + currentPrice : 'N/A' }}</div>
                 </div>
                 <div>
-                  <div class="text-gray-500 text-xs uppercase mb-1">Saved Today</div>
+                  <div class="text-gray-500 text-xs uppercase mb-1">Est. Savings Today</div>
                   <div class="text-2xl font-black text-green-400">${{ todaySavings }}</div>
                 </div>
               </div>
@@ -79,7 +79,7 @@
           <div class="bg-gradient-to-br from-gray-900/90 to-gray-950/90 rounded-2xl p-8 border-2 border-green-500/30 shadow-xl relative overflow-hidden">
             <div class="absolute top-0 right-0 w-48 h-48 bg-green-500/10 rounded-full blur-3xl"></div>
             <div class="relative z-10">
-              <div class="text-green-400/70 text-xs font-bold uppercase tracking-widest mb-3">Today's Savings</div>
+              <div class="text-green-400/70 text-xs font-bold uppercase tracking-widest mb-3">Estimated Savings Today</div>
               <div class="flex items-end gap-2">
                 <div class="text-5xl font-black text-green-400 drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]">
                   ${{ todaySavings }}
