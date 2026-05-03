@@ -251,4 +251,7 @@ For questions or issues, please contact:
 
 **PowerOptim** - *Optimizing Energy, Powering the Future* ⚡
 
-Copyright (c) 2026 PowerOptim. Licensed under the MIT License.
+## License
+
+Copyright © 2026 PowerOptim. All rights reserved.
+See [LICENSE](LICENSE) for details.
