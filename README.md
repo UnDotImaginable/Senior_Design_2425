@@ -4,6 +4,14 @@
 
 > Senior Capstone Project - Computer Science 2025/2026 - Cleveland State University
 
+## PowerOptim Team
+- Spencer York
+- Veer Gaudani
+- Miguel Gallego Villegas
+- Noe Cifuentes
+
+This is a senior design project developed by the PowerOptim team.
+
 A real-time energy monitoring and optimization system that intelligently manages power consumption between grid electricity and battery storage to minimize costs.
 
 ![PowerOptim Dashboard](docs/dashboard.png)
@@ -242,3 +250,5 @@ For questions or issues, please contact:
 ---
 
 **PowerOptim** - *Optimizing Energy, Powering the Future* ⚡
+
+Copyright (c) 2026 PowerOptim. Licensed under the MIT License.
